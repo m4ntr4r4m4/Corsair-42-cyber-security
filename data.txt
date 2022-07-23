@@ -1,0 +1,6 @@
+Public-Key: (8 bit)
+Modulus: 187 (0xbb)
+Exponent: 7 (0x7)
+-----BEGIN PUBLIC KEY-----
+MBswDQYJKoZIhvcNAQEBBQADCgAwBwICALsCAQc=
+-----END PUBLIC KEY-----
