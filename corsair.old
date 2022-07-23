@@ -6,7 +6,7 @@
 /*   By: ahammoud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 14:47:20 by ahammoud          #+#    #+#             */
-/*   Updated: 2022/07/23 17:39:41 by ahammoud         ###   ########.fr       */
+/*   Updated: 2022/07/23 14:06:26 by ahammoud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,15 @@ RSA		*read_publickey(char	*str)
     return rsa;
 }
 
-t_prime get_primes(long	double num)
+t_prime get_primes(unsigned long num)
 {
-	long	double	count = 2;
-	long	double	i=0;
+	int count = 2;
+	int	i=0;
 	t_prime	z;
-	long double x = num;
-	printf("casted to double %Lf\n", x);
 	
     while(num > 1)
     {
-        while(fmodl(num ,count) == 0)
+        while(num % count == 0)
         {
 			if(i++ == 0)
 				z.q = count;
@@ -59,40 +57,37 @@ t_prime get_primes(long	double num)
             num = num / count;
         }
 		count++;
-
     }
-		printf("this P %Lf and this Q %Lf\n", z.p, z.q);
 	return (z);
 }
 
-long	double phi(t_prime z)
+unsigned long phi(t_prime z)
 {
-	long	double  phi;
+	unsigned long  phi;
 
 	phi = (z.p - 1) * (z.q - 1);
-
+ //	printf("this is P  %lu Q %lu \n",z.p, z.q);
 	return phi;
 }
 
+
 t_var	get_rest(t_var	var, t_prime z)
 {
-	var.e1 = fmodl(var.privexp , (z.p - 1));
-	var.e2 = fmodl(var.privexp ,(z.q - 1));
- 	printf("this is P  %Lf Q %Lf \n",z.p, z.q);
-	var.coeff = fmodl(powl(z.q, (z.p - 2)) , z.p);
-	printf("coeff %Lf\n", var.coeff);
+	var.e1 = var.privexp % (z.p - 1);
+	var.e2 = var.privexp % (z.q - 1);
+ 	printf("this is P  %lu Q %lu \n",z.p, z.q);
+	var.coeff = (unsigned long) pow(z.q, (z.p - 2)) % z.p;
+ //	printf("this is P  %lu Q %lu \n",z.p, z.q);
+ //	printf("this is P  %lu Q %lu \n",z.p, z.q);
 	return (var);
 }
 
 t_var	get_privexp(t_var	var)
 {
-	long	double	d = 0;
-	long	double	x;
-	printf("i am here inside prive exp %Lf %Lf  \n", var.phi, var.pubexp);
+	unsigned long	d = 0;
 	while(d < (var.phi))
 	{
-		x = d * var.pubexp;
-		if (fmodl(x, var.phi) == 1)
+		if ((d * var.pubexp) % var.phi == 1)
 			var.privexp = d;
 		d++;
 	}
@@ -102,20 +97,24 @@ t_var	get_privexp(t_var	var)
 t_var	calculation(RSA *rsa, t_prime z)
 {
 	t_var	var;
-	char	*ptr;
 	
 	var.phi = phi(z); 
-	var.m = z.p * z.q;
-	var.pubexp = strtold(BN_bn2dec(RSA_get0_e(rsa)), &ptr);
+	printf("\n this is phi %lu\n", var.phi);
+	printf("\nthis is modulus %lu\n", var.m = z.p * z.q);
+	var.pubexp = atoi(BN_bn2dec(RSA_get0_e(rsa)));
+	printf("this is pubexp %lu \n",var.pubexp);
 	var = get_privexp(var);
 	var	= get_rest(var, z);
+	printf("this is privexp %lu \n",var.privexp);
+	printf("this is e1 %lu \n",var.e1);
+	printf("this is e2 %lu \n",var.e2);
+	printf("this is coeff %lu \n",var.coeff);
 	return (var);
 }
 
 int	gen_rsa_priv(t_var var, t_prime z)
 {
 	RSA *rsa;
-	char	str[1000];
 
 	BIGNUM	*n = NULL;
 	BIGNUM	*e = NULL;
@@ -126,32 +125,27 @@ int	gen_rsa_priv(t_var var, t_prime z)
 	BIGNUM	*e2 = NULL;
 	BIGNUM	*coeff = NULL;
 
-
-
-snprintf( str , 1000   , "%Lf",var.m);
-	if(!BN_dec2bn(&n, str))
+	if(!BN_dec2bn(&n, ft_itoa(var.m)))
 		printf("error bignum n\n");
-snprintf(str , 1000   , "%Lf", var.pubexp);
-	if(!BN_dec2bn(&e, str))
+	if(!BN_dec2bn(&e, ft_itoa(var.pubexp)))
 		printf("error bignum e\n");
-snprintf(str , 1000   , "%Lf",var.privexp);
-	if(!BN_dec2bn(&d, str))
+	if(!BN_dec2bn(&d, ft_itoa(var.privexp)))
 		printf("error bignum d\n");
-snprintf(str , 1000   , "%Lf", z.p);
-	if(!BN_dec2bn(&p, str))
+	if(!BN_dec2bn(&p, ft_itoa(z.p)))
 		printf("error bignum p\n");
-snprintf(str , 1000   , "%Lf", z.q);
-	if(!BN_dec2bn(&q, str))
+	if(!BN_dec2bn(&q, ft_itoa(z.q)))
 		printf("error bignum q\n");
-snprintf( str , 1000   , "%Lf", var.e1);
-	if(!BN_dec2bn(&e1, str))
+	if(!BN_dec2bn(&e1, ft_itoa(var.e1)))
 		printf("error bignum e1\n");
-snprintf( str , 1000   , "%Lf", var.e2);
-	if(!BN_dec2bn(&e2, str))
+	if(!BN_dec2bn(&e2, ft_itoa(var.e2)))
 		printf("error bignum e2\n");
-snprintf(str , 1000   , "%Lf", var.coeff);
-	if(!BN_dec2bn(&coeff, str))
+	if(!BN_dec2bn(&coeff, ft_itoa(var.coeff)))
 		printf("error bignum coeff\n");
+
+
+
+
+
 
 	rsa = RSA_new();
 	if(!RSA_set0_key(rsa, n, e, d))
@@ -161,6 +155,7 @@ snprintf(str , 1000   , "%Lf", var.coeff);
 	if(!RSA_set0_crt_params(rsa, e1, e2, coeff))
 		printf("\nerror key crt params\n");
 
+	int	fd = open("cracked_private.key", O_CREAT | O_RDWR);
 	BIO	*keybio=NULL;
 	keybio = BIO_new(BIO_s_mem());
 
@@ -170,9 +165,17 @@ snprintf(str , 1000   , "%Lf", var.coeff);
 	RSA	*rs1 = RSA_new();
     rs1 = PEM_read_bio_RSAPrivateKey(keybio, &rs1 , 0, 0);
 
-	printf("\nthis is modulus from last keybio %s\n", BN_bn2dec((RSA_get0_n(rs1))));
+	printf("\nthis is modulus ifromlast keybio %s\n", BN_bn2dec((RSA_get0_n(rs1))));
 
 	write_privatekey(rsa, keybio);
+
+//	FILE *fp;
+//	fp = fopen("cracker_private_file", "w");
+//	PEM_write_RSAPrivateKey(fp, rsa, 0,0,0,0,0);
+//
+//	fclose(fp);
+
+
 	return (0);
 }
 
@@ -184,13 +187,12 @@ void	begin(char *str)
 	const BIGNUM	*e = NULL;
 	t_prime	z;
 	t_var	var;
-	char *ptr;
 
 	n = RSA_get0_n(rsa);
 	e = RSA_get0_e(rsa);
-	char *s = BN_bn2dec(n);
-	z = get_primes(strtold(s, &ptr));
-	printf("\nthis is primes p %Lf q%Lf\n", z.p, z.q);
+//	printf("\nthis is modulus  %s\n", BN_bn2dec(n));
+//	printf("\n this si exp   %s\n", BN_bn2dec(e));
+	z = get_primes(atoi(BN_bn2dec(n)));
 	var = calculation(rsa, z);
 	gen_rsa_priv(var, z);
 }
