@@ -13,7 +13,7 @@ CC		=	gcc
 NAME	=	corsair
 CFLAGS	=	-Wall -Wextra -Ofast -g /sgoinfre/students/ahammoud/homebrew/opt/openssl@1.1/lib/*.a 
 ${NAME}	:	${OBJ}
-			${LIBFT.a}
+			@${LIBFT.a}
 			${CC} ${CFLAGS} ${OBJ} ./libft/libft.a -o ${NAME}
 
 

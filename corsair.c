@@ -6,11 +6,23 @@
 /*   By: ahammoud <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/20 14:47:20 by ahammoud          #+#    #+#             */
-/*   Updated: 2022/07/23 02:46:06 by ahammoud         ###   ########.fr       */
+/*   Updated: 2022/07/23 14:06:26 by ahammoud         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "corsair.h"
+
+
+int		write_privatekey(RSA *rsa, BIO *keybio)
+{
+
+	BIO *bio_private;
+
+	bio_private = BIO_new_file("private_new.pem", "w+");
+	PEM_write_bio_RSAPrivateKey(bio_private, rsa, 0, 0, 0, 0, 0);
+    return 0;
+}
+
 
 RSA		*read_publickey(char	*str)
 {
@@ -103,6 +115,7 @@ t_var	calculation(RSA *rsa, t_prime z)
 int	gen_rsa_priv(t_var var, t_prime z)
 {
 	RSA *rsa;
+
 	BIGNUM	*n = NULL;
 	BIGNUM	*e = NULL;
 	BIGNUM	*d = NULL;
@@ -141,31 +154,26 @@ int	gen_rsa_priv(t_var var, t_prime z)
 		printf("\nerror key factors\n");
 	if(!RSA_set0_crt_params(rsa, e1, e2, coeff))
 		printf("\nerror key crt params\n");
-//	BIO	*keybio=NULL;
-//	keybio = BIO_new(BIO_s_mem());
-//
-//	if(!PEM_write_bio_RSAPublicKey(keybio, rsa))
-//		printf("\nerror BIO write\n");
-//
-//
-//	if(!BIO_write_filename(keybio, "cracked_private.key"))
-//		printf("error writing file\n");
-    
 
-//	int	fd = open("cracke_private.key", O_CREAT | O_RDWR);
-//	BIO	*keybio=NULL;
-//	keybio = BIO_new_fp(fd, BIO_NOCLOSE);
-//
-//	if(!PEM_write_bio_RSAPublicKey(keybio, rsa))
-//		printf("\nerror BIO write\n");
-//
-//	close(fd);
+	int	fd = open("cracked_private.key", O_CREAT | O_RDWR);
+	BIO	*keybio=NULL;
+	keybio = BIO_new(BIO_s_mem());
+
+	if(!PEM_write_bio_RSAPrivateKey(keybio, rsa, 0,0,0,0,0))
+		printf("\nerror BIO write\n");
 	
-	FILE *fp;
-	fp = fopen("cracker_private_file", "w");
-	PEM_write_RSAPrivateKey(fp, rsa, 0,0,0,0,0);
+	RSA	*rs1 = RSA_new();
+    rs1 = PEM_read_bio_RSAPrivateKey(keybio, &rs1 , 0, 0);
 
-	fclose(fp);
+	printf("\nthis is modulus ifromlast keybio %s\n", BN_bn2dec((RSA_get0_n(rs1))));
+
+	write_privatekey(rsa, keybio);
+
+//	FILE *fp;
+//	fp = fopen("cracker_private_file", "w");
+//	PEM_write_RSAPrivateKey(fp, rsa, 0,0,0,0,0);
+//
+//	fclose(fp);
 
 
 	return (0);
